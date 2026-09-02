@@ -371,6 +371,8 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- FIN DEL SCRIPT DE POBLADO
 -- =========================================================
 
+use proyecto;
+
 -- permisos
 
 
@@ -396,9 +398,35 @@ grant select on proyecto.reporte_pagos_pendientes  to 'contador'@'localhost';
 grant select on proyecto.clientes  to 'contador'@'localhost';
 
 
+
 -- funciones
 
-select c2.Nombre, a.Nombre, c.Monto_Total   from  contratos c join agentes a on c.ID_Agente_Vendedor = a.ID_Agente join clientes c2 on c.ID_Cliente = c2.ID_Cliente
+-- comision 
 
-create function comision ()
+use proyecto;
 
+
+DELIMITER //
+
+CREATE FUNCTION comision (prop_id INT)
+RETURNS DECIMAL(50,2)
+DETERMINISTIC
+BEGIN
+	declare valor decimal (50,2);
+	
+	SELECT (p.Precio * (tp.comision_venta/100))  into valor
+	from PROPIEDADES p 
+	join TIPOS_PROPIEDAD tp 
+	on p.ID_TipoPropiedad   = tp.ID_TipoPropiedad 
+	WHERE p.ID_Propiedad = prop_id;
+	
+	RETURN valor;
+END //
+
+DELIMITER ;
+
+SELECT  comision(1)
+
+-- Calcular deuda pendiente en contratos de arriendo.
+
+SELECT *  FROM  CONTRATOS c join TIPOS_CONTRATO tc on c.ID_TipoContrato = tc.ID_TipoContrato WHERE c.Estado_Contrato < CURDATE()
