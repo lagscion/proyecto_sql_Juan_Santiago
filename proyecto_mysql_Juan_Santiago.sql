@@ -369,10 +369,10 @@ drop database proyecto;
 	create user 'contador'@'localhost' identified by 'Contador_67_'
 	
 	grant SELECT, INSERT, update on proyecto.pagos  to 'contador'@'localhost';
-	grant select on proyecto.contratos to 'contador'@'localhost';
-	grant select, update on proyecto.propiedades to 'contador'@'localhost';
-	grant select on proyecto.reporte_pagos_pendientes  to 'contador'@'localhost';
-	grant select on proyecto.clientes  to 'contador'@'localhost';
+	grant select on proyecto.CONTRATOS  to 'contador'@'localhost';
+	grant select, update on proyecto.PROPIEDADES  to 'contador'@'localhost';
+	grant select on proyecto.REPORTE_PAGOS_PENDIENTES  to 'contador'@'localhost';
+	grant select on proyecto.CLIENTES  to 'contador'@'localhost';
 	
 	
 	
@@ -391,8 +391,8 @@ DELIMITER //
 		declare how int;
 		
 	select count(tp.NombreTipo ) into how
-	from propiedades p 
-	join tipos_propiedad tp 
+	from PROPIEDADES p 
+	join TIPOS_PROPIEDAD  tp 
 	on p.ID_TipoPropiedad  = tp.ID_TipoPropiedad 
 	where p.Estado_Disponibilidad = 'disponible' and tp.NombreTipo = tipe;
 		
@@ -403,7 +403,7 @@ DELIMITER ;
 	
 	drop function libre
 	
-	select * from tipos_propiedad tp join propiedades p on tp.ID_TipoPropiedad = p.ID_TipoPropiedad where tp.NombreTipo = 'apartamento' 
+	select * from TIPOS_PROPIEDAD  tp join PROPIEDADES  p on tp.ID_TipoPropiedad = p.ID_TipoPropiedad where tp.NombreTipo = 'apartamento' 
 	
 	select libre('penthouse')
 	
@@ -583,7 +583,18 @@ SELECT * FROM AUDITORIA_CONTRATOS ORDER BY ID_AuditoriaContr DESC;
 
 SHOW VARIABLES LIKE 'event_scheduler';
 	
-	
-	
-	
-	
+-- indices
+
+USE proyecto;
+
+-- Índice para acelerar la búsqueda de propiedades disponibles por tipo (usado en la función 'libre')
+CREATE INDEX idx_propiedades_estado_tipo 
+ON PROPIEDADES (Estado_Disponibilidad, ID_TipoPropiedad);
+
+-- Índice para acelerar el cálculo de deudas y pagos por contrato (usado en fn_ObtenerDeudaContrato)
+CREATE INDEX idx_pagos_contrato 
+ON PAGOS (ID_Contrato);
+
+-- Índice para búsquedas frecuentes de contratos activos por cliente o propiedad
+CREATE INDEX idx_contratos_estado 
+ON CONTRATOS (Estado_Contrato, ID_Propiedad, ID_Cliente);
